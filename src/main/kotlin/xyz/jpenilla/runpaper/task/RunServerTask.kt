@@ -181,7 +181,7 @@ public abstract class RunServerTask : JavaExec() {
 
     // Add plugins
     if (addPluginArgumentSupported()) {
-      args(pluginJars.files.map { "-add-plugin=${it.absolutePath}" })
+      args(pluginJars.files.map { "--add-plugin=${it.absolutePath}" })
     } else {
       pluginJars.files.map { it.toPath() }.forEachIndexed { i, jar ->
         jar.copyTo(plugins.resolve(prefix + i + extension))

@@ -108,7 +108,7 @@ public class RunPaper : Plugin<Project> {
     val runMojangMappedServer = tasks.register<RunServerTask>(Constants.Tasks.RUN_MOJANG_MAPPED_SERVER) {
       group = Constants.TASK_GROUP
       description = "Run a Mojang mapped Paper server for plugin testing, by integrating with paperweight."
-      minecraftVersion.value(paperweight.minecraftVersion).disallowChanges()
+      minecraftVersion.value(paperweight.minecraftVersion)
 
       val serverRuntimeConfig = configurations.findByName(MOJANG_MAPPED_SERVER_RUNTIME_CONFIG)
       if (serverRuntimeConfig == null) {
@@ -118,10 +118,10 @@ public class RunPaper : Plugin<Project> {
 
         @Suppress("unchecked_cast")
         val mojangMappedServerJarProvider = legacyMethod(paperweight) as Provider<RegularFile>
-        serverJar.value(mojangMappedServerJarProvider).disallowChanges()
+        serverJar.value(mojangMappedServerJarProvider)
       } else {
-        mainClass.value("org.bukkit.craftbukkit.Main").disallowChanges()
-        serverClasspath.from(serverRuntimeConfig).disallowChanges()
+        mainClass.value("org.bukkit.craftbukkit.Main")
+        serverClasspath.from(serverRuntimeConfig)
       }
     }
 
