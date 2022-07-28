@@ -63,6 +63,7 @@ public abstract class PaperclipService : BuildService<PaperclipService.Parameter
 
   public companion object {
     private val LOGGER: Logger = Logging.getLogger(PaperclipService::class.java)
+    private val LOGGING_ENABLED = System.getProperty("paperclip.debug") != null
   }
 
   private val api: DownloadsAPI = DownloadsAPI()
@@ -128,7 +129,7 @@ public abstract class PaperclipService : BuildService<PaperclipService.Parameter
     val possible = version.knownJars[build]
     if (possible != null && !parameters.refreshDependencies.get()) {
       // We already have this Paperclip!
-      LOGGER.lifecycle("Located Paper {} build {} in local cache.", minecraftVersion, build)
+      if (LOGGING_ENABLED) LOGGER.lifecycle("Located Paper {} build {} in local cache.", minecraftVersion, build)
 
       // Verify hash is still correct
       val localPaperclip = paperclipsFor(minecraftVersion).resolve(possible.fileName)
@@ -144,7 +145,7 @@ public abstract class PaperclipService : BuildService<PaperclipService.Parameter
       version.knownJars.remove(build)
       writeVersions()
       localPaperclip.deleteIfExists()
-      LOGGER.lifecycle("Invalid SHA256 hash for locally cached Paper {} build {}, invalidating and attempting to re-download.", minecraftVersion, build)
+      if (LOGGING_ENABLED) LOGGER.lifecycle("Invalid SHA256 hash for locally cached Paper {} build {}, invalidating and attempting to re-download.", minecraftVersion, build)
       logExpectedActual(possible.sha256, localBuildHash)
     }
 
@@ -152,7 +153,8 @@ public abstract class PaperclipService : BuildService<PaperclipService.Parameter
     if (parameters.offlineMode.get()) {
       error("Offline mode is enabled and Run Paper could not locate a locally cached build.")
     }
-    LOGGER.lifecycle("Downloading Paper {} build {}...", minecraftVersion, build)
+
+    if (LOGGING_ENABLED) LOGGER.lifecycle("Downloading Paper {} build {}...", minecraftVersion, build)
     val buildResponse = api.build(Projects.PAPER, minecraftVersion, build)
     val download = buildResponse.downloads["application"] ?: error("Could not find download.")
     val downloadLink = api.downloadURL(Projects.PAPER, minecraftVersion, build, download)
@@ -166,7 +168,7 @@ public abstract class PaperclipService : BuildService<PaperclipService.Parameter
       .download(createDownloadListener(project))
 
     when (downloadResult) {
-      is Downloader.Result.Success -> LOGGER.lifecycle("Done downloading Paper, took {}.", Duration.ofMillis(System.currentTimeMillis() - start).prettyPrint())
+      is Downloader.Result.Success -> if (LOGGING_ENABLED) LOGGER.lifecycle("Done downloading Paper, took {}.", Duration.ofMillis(System.currentTimeMillis() - start).prettyPrint())
       is Downloader.Result.Failure -> throw IllegalStateException("Failed to download Paper.", downloadResult.throwable)
     }
 
@@ -174,11 +176,12 @@ public abstract class PaperclipService : BuildService<PaperclipService.Parameter
     val downloadedFileHash = tempFile.sha256()
     if (downloadedFileHash != download.sha256) {
       tempFile.deleteIfExists()
-      LOGGER.lifecycle("Invalid SHA256 hash for downloaded file: '{}', deleting.", download.name)
+      if (LOGGING_ENABLED) LOGGER.lifecycle("Invalid SHA256 hash for downloaded file: '{}', deleting.", download.name)
       logExpectedActual(download.sha256, downloadedFileHash)
       error("Failed to verify SHA256 hash of downloaded file.")
     }
-    LOGGER.lifecycle("Verified SHA256 hash of downloaded jar.")
+
+    if (LOGGING_ENABLED) LOGGER.lifecycle("Verified SHA256 hash of downloaded jar.")
 
     val paperclipsDir = paperclipsFor(minecraftVersion)
     paperclipsDir.createDirectories()
@@ -209,7 +212,7 @@ public abstract class PaperclipService : BuildService<PaperclipService.Parameter
     }
 
     if (parameters.offlineMode.get()) {
-      LOGGER.lifecycle("Offline mode enabled, attempting to use latest local build of Paper for Minecraft {}.", minecraftVersion)
+      if (LOGGING_ENABLED) LOGGER.lifecycle("Offline mode enabled, attempting to use latest local build of Paper for Minecraft {}.", minecraftVersion)
       return resolveLatestLocalBuild(minecraftVersion)
     }
 
@@ -230,14 +233,14 @@ public abstract class PaperclipService : BuildService<PaperclipService.Parameter
   }
 
   private fun resolveLatestRemoteBuild(minecraftVersion: Version): Int = try {
-    LOGGER.lifecycle("Fetching Paper builds for Minecraft {}...", minecraftVersion.name)
+    if (LOGGING_ENABLED) LOGGER.lifecycle("Fetching Paper builds for Minecraft {}...", minecraftVersion.name)
     api.version(Projects.PAPER, minecraftVersion.name).builds.last().apply {
-      LOGGER.lifecycle("Latest build for {} is {}.", minecraftVersion.name, this)
+      if (LOGGING_ENABLED) LOGGER.lifecycle("Latest build for {} is {}.", minecraftVersion.name, this)
       versions.versions[minecraftVersion.name] = minecraftVersion.copy(lastUpdateCheck = System.currentTimeMillis())
       writeVersions()
     }
   } catch (ex: Exception) {
-    LOGGER.lifecycle("Failed to check for latest release, attempting to use latest local build.")
+    if (LOGGING_ENABLED) LOGGER.lifecycle("Failed to check for latest release, attempting to use latest local build.")
     resolveLatestLocalBuild(minecraftVersion)
   }
 
@@ -258,7 +261,7 @@ public abstract class PaperclipService : BuildService<PaperclipService.Parameter
     } else {
       LoggingDownloadListener(
         LOGGER,
-        logger = { state, message -> state.lifecycle(message) },
+        logger = { state, message -> if (LOGGING_ENABLED) state.lifecycle(message) },
         prefix = "Downloading Paperclip: ",
         updateRateMs = 1000L
       )
