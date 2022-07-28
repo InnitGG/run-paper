@@ -29,15 +29,15 @@ import xyz.jpenilla.runpaper.Constants
 import xyz.jpenilla.runpaper.service.PaperclipService
 import xyz.jpenilla.runpaper.service.PaperclipService.Parameters
 
-internal val Project.paperclipService: Provider<PaperclipService>
+public val Project.paperclipService: Provider<PaperclipService>
   get() = gradle.sharedServices.registrations
     .named<BuildServiceRegistration<PaperclipService, Parameters>>(Constants.Services.PAPERCLIP)
     .flatMap { it.service }
 
-internal inline fun <reified T> NamedDomainObjectContainer<*>.find(name: String): T? =
+public inline fun <reified T> NamedDomainObjectContainer<*>.find(name: String): T? =
   findByName(name) as? T
 
-internal fun Project.findJavaLauncher(): Provider<JavaLauncher>? {
+public fun Project.findJavaLauncher(): Provider<JavaLauncher>? {
   val service = project.extensions.findByType<JavaToolchainService>() ?: return null
   return project.extensions.findByType<JavaPluginExtension>()?.toolchain?.let { toolchain ->
     service.launcherFor(toolchain)

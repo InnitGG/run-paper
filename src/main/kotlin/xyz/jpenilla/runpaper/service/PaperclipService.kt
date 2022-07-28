@@ -54,14 +54,14 @@ import kotlin.io.path.deleteIfExists
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.moveTo
 
-internal abstract class PaperclipService : BuildService<PaperclipService.Parameters>, AutoCloseable {
-  interface Parameters : BuildServiceParameters {
-    val cacheDirectory: DirectoryProperty
-    val refreshDependencies: Property<Boolean>
-    val offlineMode: Property<Boolean>
+public abstract class PaperclipService : BuildService<PaperclipService.Parameters>, AutoCloseable {
+  public interface Parameters : BuildServiceParameters {
+    public val cacheDirectory: DirectoryProperty
+    public val refreshDependencies: Property<Boolean>
+    public val offlineMode: Property<Boolean>
   }
 
-  companion object {
+  public companion object {
     private val LOGGER: Logger = Logging.getLogger(PaperclipService::class.java)
   }
 
@@ -115,7 +115,7 @@ internal abstract class PaperclipService : BuildService<PaperclipService.Paramet
   private val paperclips: Path
     get() = parameters.cacheDirectory.path.resolve("paperclips")
 
-  fun resolvePaperclip(
+  public fun resolvePaperclip(
     project: Project,
     minecraftVersion: String,
     paperBuild: RunServerTask.PaperBuild
@@ -301,18 +301,18 @@ internal abstract class PaperclipService : BuildService<PaperclipService.Paramet
   private fun unknownMinecraftVersion(minecraftVersion: String): Nothing =
     error("Unknown Minecraft Version: $minecraftVersion")
 
-  data class PaperclipJar(
+  public data class PaperclipJar(
     val buildNumber: Int,
     val fileName: String,
     val sha256: String,
     val keep: Boolean = false
   )
 
-  data class Versions(
+  public data class Versions(
     val versions: MutableMap<String, Version> = HashMap()
   )
 
-  data class Version(
+  public data class Version(
     val name: String,
     val lastUpdateCheck: Long = 0L,
     val knownJars: MutableMap<Int, PaperclipJar> = HashMap(),
